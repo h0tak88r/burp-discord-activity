@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+}
+
+group = 'burp'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+configurations {
+    // Create a configuration for Montoya API that's optional
+    montoyaApi
+}
+
+dependencies {
+    // Montoya API - provided by Burp Suite at runtime, but needed for compilation
+    // Maven Central doesn't have it, so we need to download manually
+    // Download from: https://github.com/PortSwigger/burp-extensions-montoya-api/releases
+    // Look for version 2025.11 or latest
+    // Place in libs/montoya-api-2025.11.jar
+    compileOnly files('libs/montoya-api-2025.12.jar')
+    
+    // Discord RPC library - REQUIRED: must be downloaded manually
+    // Download from: https://github.com/MinnDevelopment/java-discord-rpc/releases
+    // Download: java-discord-rpc-2.0.1-all.jar (the "all" version includes native libraries)
+    // Place in libs/java-discord-rpc-2.0.1-all.jar
+    implementation files('libs/java-discord-rpc-2.0.1-all.jar')
+}
+
+jar {
+    archiveBaseName = 'BurpDiscordActivity'
+    archiveVersion = project.version
+    
+    manifest {
+        attributes(
+            'Implementation-Title': 'Burp Discord Activity',
+            'Implementation-Version': project.version,
+            'Burp-Extension': 'burp.discordactivity.BurpDiscordActivity'
+        )
+    }
+    
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Legacy version for older Burp Suite
+task legacyJar(type: Jar) {
+    archiveBaseName = 'BurpDiscordActivityLegacy'
+    archiveVersion = project.version
+    
+    manifest {
+        attributes(
+            'Implementation-Title': 'Burp Discord Activity (Legacy)',
+            'Implementation-Version': project.version,
+            'Burp-Extension': 'burp.discordactivity.BurpDiscordActivityLegacy'
+        )
+    }
+    
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    // Exclude Montoya API from legacy version
+    exclude('burp/api/montoya/**')
+}
+
