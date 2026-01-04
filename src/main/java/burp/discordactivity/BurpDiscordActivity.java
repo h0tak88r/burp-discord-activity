@@ -68,7 +68,14 @@ public class BurpDiscordActivity implements BurpExtension, HttpHandler {
             return t;
         });
         
-        scheduler.scheduleAtFixedRate(this::updatePresence, 0, 30, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                updatePresence();
+            } catch (Exception e) {
+                api.logging().logToError("Error in Discord presence update: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }, 0, 30, TimeUnit.SECONDS);
         
         api.logging().logToOutput("Burp Discord Activity loaded - Project: " + projectName);
         api.logging().logToOutput("Vibe coded by @imXhandle | notrubberduck.space");
@@ -76,17 +83,22 @@ public class BurpDiscordActivity implements BurpExtension, HttpHandler {
     
     private void updatePresence() {
         // Vibe coded by @imXhandle | notrubberduck.space
-        // Check for idle (5 minutes = 300000 ms)
-        long now = System.currentTimeMillis();
-        if (isActive && (now - lastActivityTime) > 300000) {
-            isActive = false;
+        try {
+            // Check for idle (5 minutes = 300000 ms)
+            long now = System.currentTimeMillis();
+            if (isActive && (now - lastActivityTime) > 300000) {
+                isActive = false;
+            }
+            
+            String status = isActive ? "Proxy" : "Idle";
+            
+            // Always show the last target we've seen, even when idle
+            String targetToShow = hasSeenTarget ? lastHost : "None";
+            discordRPC.updatePresence(status, targetToShow, projectName, sessionStartTime);
+        } catch (Exception e) {
+            api.logging().logToError("Error updating Discord presence: " + e.getMessage());
+            e.printStackTrace();
         }
-        
-        String status = isActive ? "Proxy" : "Idle";
-        
-        // Always show the last target we've seen, even when idle
-        String targetToShow = hasSeenTarget ? lastHost : "None";
-        discordRPC.updatePresence(status, targetToShow, projectName, sessionStartTime);
     }
     
     @Override
@@ -124,7 +136,11 @@ public class BurpDiscordActivity implements BurpExtension, HttpHandler {
             
             if ((currentTime - lastUpdateTime) > throttleTime) {
                 lastUpdateTime = currentTime;
-                updatePresence();
+                try {
+                    updatePresence();
+                } catch (Exception e) {
+                    api.logging().logToError("Error updating presence from request handler: " + e.getMessage());
+                }
             }
         }
         return RequestToBeSentAction.continueWith(request);
@@ -136,9 +152,25 @@ public class BurpDiscordActivity implements BurpExtension, HttpHandler {
     }
     
     private void shutdown() {
-        if (scheduler != null) scheduler.shutdown();
-        if (discordRPC != null) discordRPC.shutdown();
-        api.logging().logToOutput("Burp Discord Activity unloaded - @imXhandle | notrubberduck.space");
+        try {
+            if (scheduler != null) {
+                scheduler.shutdown();
+                try {
+                    if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                        scheduler.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    scheduler.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+            }
+            if (discordRPC != null) {
+                discordRPC.shutdown();
+            }
+            api.logging().logToOutput("Burp Discord Activity unloaded - @imXhandle | notrubberduck.space");
+        } catch (Exception e) {
+            api.logging().logToError("Error during shutdown: " + e.getMessage());
+        }
     }
 }
 
