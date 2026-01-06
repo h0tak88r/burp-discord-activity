@@ -22,14 +22,15 @@ configurations {
 
 dependencies {
     // Montoya API - provided by Burp Suite at runtime, but needed for compilation
-    // Using JitPack to reference PortSwigger's Montoya API repository
-    // If JitPack doesn't work, fallback to local file: compileOnly files('libs/montoya-api-2025.12.jar')
-    compileOnly 'com.github.PortSwigger:burp-extensions-montoya-api:2025.12'
+    // Using local file for reliability (you've already downloaded it to libs/)
+    compileOnly files('libs/montoya-api-2025.12.jar')
     
     // Discord RPC library - REQUIRED: must be downloaded manually
     // Download from: https://github.com/MinnDevelopment/java-discord-rpc/releases
     // Download: java-discord-rpc-2.0.1-all.jar (the "all" version includes native libraries)
     // Place in libs/java-discord-rpc-2.0.1-all.jar
+    // NOTE: For Apple Silicon (M1/M2/M3), ensure you have the latest version with arm64 support
+    // If you encounter UnsatisfiedLinkError, try downloading the latest release
     implementation files('libs/java-discord-rpc-2.0.1-all.jar')
 }
 

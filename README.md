@@ -11,7 +11,7 @@ Show off your Burp Suite work on Discord! This extension updates your Discord st
 Burp Discord Activity is a Burp Suite extension that displays your security testing activity on Discord Rich Presence. It provides real-time updates about your Burp Suite session, including:
 
 - **Active Tool Status**: Shows when you're actively using Burp Suite (Proxy mode) or when you're idle
-- **Target Domain Display**: Automatically detects and displays the target domain you're testing from your HTTP requests
+- **Activity Status**: Shows your current activity status (Proxy/Idle) without revealing target domains for privacy
 - **Project Name**: Displays your current Burp Suite project name in the Discord status
 - **Idle Detection**: Automatically switches to "Idle" status after 5 minutes of no activity
 - **Automatic Reconnection**: Handles Discord connection issues gracefully and reconnects automatically
@@ -89,7 +89,7 @@ All processing happens locally on your machine. The only external communication 
    - Update your Discord status in real-time
 4. **Check your Discord status**: Your Discord friends will see:
    - **Details**: Your Burp Suite project name
-   - **State**: Current activity status (e.g., "Proxy • example.com" or "Idle • example.com")
+   - **State**: Current activity status (e.g., "Proxy" or "Idle")
    - **Session Timer**: How long you've been working in this Burp Suite session
 
 ### Troubleshooting
@@ -105,10 +105,11 @@ All processing happens locally on your machine. The only external communication 
   - Ensure all dependencies are in the `libs/` directory
   - Make sure you're using a compatible Burp Suite version (see Burp Version Compatibility)
 
-- **Wrong target showing?**
-  - The extension shows the most common target from your last 20 requests
-  - If you're testing multiple targets, it will display the one you've accessed most frequently
-  - The target updates automatically as you send more requests
+- **Apple Silicon (M1/M2/M3) compatibility issues?**
+  - If you see `UnsatisfiedLinkError` with "arm64" or "arm64e" errors, the Discord RPC library may not have native libraries for Apple Silicon
+  - Try downloading the latest version of `java-discord-rpc-2.0.1-all.jar` from the [releases page](https://github.com/MinnDevelopment/java-discord-rpc/releases)
+  - Ensure you're using the "all" version which includes native libraries
+  - If issues persist, check that your Java runtime supports the architecture
 
 - **Status stuck on "Idle"?**
   - Send a request through Burp Suite to reactivate the extension

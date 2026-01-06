@@ -55,20 +55,30 @@ public class DiscordRPCManager {
                 }
             }, 0, 2, TimeUnit.SECONDS);
             
+        } catch (UnsatisfiedLinkError e) {
+            // Handle native library issues (e.g., Apple Silicon compatibility)
+            String errorMsg = "Discord RPC native library error: " + e.getMessage();
+            if (errorMsg.contains("arm64") || errorMsg.contains("arm64e")) {
+                errorLogger.accept(errorMsg + " - Apple Silicon detected. Please ensure you're using a compatible Discord RPC library version.");
+            } else {
+                errorLogger.accept(errorMsg);
+            }
+            connected.set(false);
         } catch (Exception e) {
             errorLogger.accept("Failed to connect to Discord: " + e.getMessage());
+            connected.set(false);
         }
     }
     
     public void updatePresence(String status, String host, String projectName, long sessionStartTime) {
         // Vibe coded by @imXhandle | notrubberduck.space
         // Always allow updates for proxy status to prevent getting stuck
-        if (status.equals(lastStatus) && host.equals(lastHost)) {
+        if (status.equals(lastStatus)) {
             return;
         }
         
         lastStatus = status;
-        lastHost = host;
+        lastHost = host; // Still track for internal use, but don't display
         
         if (!connected.get()) return;
         
@@ -79,12 +89,8 @@ public class DiscordRPCManager {
             // Add game timer (start timestamp) but no custom session timer text
             presence.startTimestamp = sessionStartTime;
             
-            // Clean display without custom session timer
-            if (host.equals("None") || host.isEmpty()) {
-                presence.state = status + " • No target";
-            } else {
-                presence.state = status + " • " + host;
-            }
+            // Show only status, no target domain for privacy
+            presence.state = status;
             
             presence.largeImageKey = "burpsuite_icon";
             presence.largeImageText = "Burp Suite by @imXhandle";
