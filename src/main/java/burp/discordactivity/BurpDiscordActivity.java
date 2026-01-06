@@ -92,8 +92,9 @@ public class BurpDiscordActivity implements BurpExtension, HttpHandler {
             
             String status = isActive ? "Proxy" : "Idle";
             
-            // Don't show target domain for privacy - just show status
-            discordRPC.updatePresence(status, "", projectName, sessionStartTime);
+            // Show target domain only if configured to do so
+            String targetDisplay = ExtensionConfig.SHOW_TARGET_DOMAIN && hasSeenTarget ? lastHost : "";
+            discordRPC.updatePresence(status, targetDisplay, projectName, sessionStartTime);
         } catch (Exception e) {
             api.logging().logToError("Error updating Discord presence: " + e.getMessage());
             e.printStackTrace();

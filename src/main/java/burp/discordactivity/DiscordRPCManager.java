@@ -89,8 +89,12 @@ public class DiscordRPCManager {
             // Add game timer (start timestamp) but no custom session timer text
             presence.startTimestamp = sessionStartTime;
             
-            // Show only status, no target domain for privacy
-            presence.state = status;
+            // Show status, optionally with target domain if provided
+            if (host != null && !host.isEmpty()) {
+                presence.state = status + " - " + host;
+            } else {
+                presence.state = status;
+            }
             
             presence.largeImageKey = "burpsuite_icon";
             presence.largeImageText = "Burp Suite by @imXhandle";

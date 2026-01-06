@@ -39,3 +39,4 @@ Thumbs.db
 *.swp
 *~
 
+.gradle-home/
